@@ -30,7 +30,7 @@ az.rcParams["stats.information_criterion"] = "waic"
 
 #read in all data sources from file
 subs, dists, months, active_users, divs, removals  = read_all("./data/skip_list.txt", "./data/distinctiveness_scores.json",
-        "./data/subscriber_info.csv", "./data/active_users_info.csv", "./data/diversity_scores-v3/", "./data/removal_ratio_info.csv")
+        "./data/subscriber_info.csv", "./data/active_users_info.csv", "./data/diversity_scores.json", "./data/removal_ratio_info.csv", "data/month_indices.json")
 
 #convert each data source into a matrix. 
 #As described in 3.3, for each subreddit, use only the longest contiguous sequence of months with valid data.
@@ -50,6 +50,7 @@ r_mat,mean_dict, std_dict = standardize_and_diff_mat(r_mat, mean_dict, std_dict,
 s_differences_mat, mean_dict, std_dict = standardize_and_diff_mat(s_mat, mean_dict, std_dict, "growth", True) 
 div_differences_mat, mean_dict, std_dict = standardize_and_diff_mat(div_mat, mean_dict, std_dict, "div", True) 
 
+print("CLEARED PREPROCESSING")
 
 #run the time series model specified in model.py
 inf_data = run_model(d_mat, s_differences_mat, r_mat, div_differences_mat, month_mat, mask)

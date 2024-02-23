@@ -43,40 +43,27 @@ def _read_active_users(active_user_loc, skip_list, valid_subs):
                 active_users[sub] = counts
     return active_users
 
-def _read_diversity_gen_months(diversity_loc, skip_list, valid_subs, active_users):
-    diversity_data = {}
-    month_indices = {}
-    count = 0
-    for year in [2018, 2019, 2020, 2021]:
-        start = 1
-        if year == 2018:
-            start = 3
-        for month in range(start,13):
-            json_name = "{}/{}_{}.json".format(diversity_loc, year, month)
-            with open(json_name) as f:
-                data = json.load(f)
-                for sub, score in data.items():
-                    if sub in valid_subs and sub not in skip_list:
-                        if sub not in diversity_data:
-                            diversity_data[sub] = []
-                            month_indices[sub] = []
-                        if score != -1.0:
-                            diversity_data[sub].append(1 - score)
-                        else:
-                            diversity_data[sub].append(score)
-                        month_indices[sub].append(count)
-            if not (month == 3 and year == 2018):
-                count += 1
-    for sub in diversity_data.keys():
-        diversity_data[sub] = diversity_data[sub][1:]
-        month_indices[sub] = month_indices[sub][1:]
-        for i in range(0,24):
-            if i < len(diversity_data[sub]) and active_users[sub][i] < 50:
-                diversity_data[sub][i] = -1
-            elif i >= len(diversity_data[sub]): 
-                diversity_data[sub].append(-1)
-                month_indices[sub].append(-1)    
-    return diversity_data, month_indices
+def _read_diversity(diversity_loc, skip_list, valid_subs):
+    with open(diversity_loc) as f:
+        diversity_data = json.load(f)
+    to_remove = []
+    for key in diversity_data.keys():
+        if key in skip_list or key not in valid_subs:
+            to_remove.append(key)
+    for key in to_remove:
+        diversity_data.pop(key)
+    return diversity_data
+
+def _read_months(month_loc, skip_list, valid_subs):
+    with open(month_loc) as f:
+        month_indices = json.load(f)
+    to_remove = []
+    for key in month_indices.keys():
+        if key in skip_list or key not in valid_subs:
+            to_remove.append(key)
+    for key in to_remove:
+        month_indices.pop(key)
+    return month_indices
 
 def _read_removal_ratio(removal_loc, skip_list, valid_subs):
     removal_data = {}
@@ -89,14 +76,15 @@ def _read_removal_ratio(removal_loc, skip_list, valid_subs):
                 removal_data[sub] = removal_rates
     return removal_data
 def read_all(skip_loc, dist_scores_loc, subscribers_loc,
-        active_users_loc, diversity_loc, removal_loc):
+        active_users_loc, diversity_loc, removal_loc, month_loc):
     skip_list = _read_skip(skip_loc)
     distinctiveness_data = _read_distinctiveness(dist_scores_loc, skip_list)
     valid_subs = set(distinctiveness_data.keys())
     subscriber_data = _read_subscribers(subscribers_loc, skip_list, valid_subs)
     active_users = _read_active_users(active_users_loc, skip_list, valid_subs)
-    diversity_data, month_indices = _read_diversity_gen_months(diversity_loc, skip_list, valid_subs, active_users) 
+    diversity_data =  _read_diversity(diversity_loc, skip_list, valid_subs) 
     removal_ratio = _read_removal_ratio(removal_loc, skip_list, valid_subs) 
+    month_indices = _read_months(month_loc, skip_list, valid_subs)
     return subscriber_data, distinctiveness_data, month_indices, active_users, diversity_data, removal_ratio
 
 def _longest_contig(subscriber_timeline, distinctiveness_timeline, diversity_timeline):

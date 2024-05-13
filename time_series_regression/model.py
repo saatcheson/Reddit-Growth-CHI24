@@ -8,7 +8,7 @@ from numpyro import deterministic
 import arviz as az
 import jax
 import jax.numpy as jnp
-from jax.config import config
+from jax import config
 from jax.scipy.special import expit
 
 
